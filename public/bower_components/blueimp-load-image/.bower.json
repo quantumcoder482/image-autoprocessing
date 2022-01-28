@@ -1,0 +1,14 @@
+{
+  "name": "blueimp-load-image",
+  "homepage": "https://github.com/blueimp/JavaScript-Load-Image",
+  "version": "5.16.0",
+  "_release": "5.16.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v5.16.0",
+    "commit": "6c2bf3ff95963601c1f682793a45f311f0320673"
+  },
+  "_source": "https://github.com/blueimp/JavaScript-Load-Image.git",
+  "_target": ">=1.13.0",
+  "_originalSource": "blueimp-load-image"
+}
