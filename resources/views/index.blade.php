@@ -14,7 +14,6 @@
         .hidden {
             display: none;
         }
-
     </style>
 @endpush
 
@@ -30,7 +29,7 @@
         <div class="row mt-3">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="label-control">Car Type</label>
+                    <label for="car_type" class="label-control">Car Type</label>
                     <input type="text" class="form-control" name="car_type" id="car_type" value="">
                 </div>
             </div>
@@ -38,11 +37,12 @@
         <div class="row mt-3">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="label-control">Product Name</label>
+                    <label for="product_name" class="label-control">Product Name</label>
                     <input type="text" class="form-control" name="product_name" id="product_name" value="">
                 </div>
             </div>
         </div>
+
         <input type="hidden" name="attach_files" id="attach_files" value="">
         <input type="hidden" name="zip_file_name" id="zip_file_name" value="">
     </form>
@@ -119,7 +119,12 @@
 
             if (upload_resp.status == 'success') {
 
-                $('#attach_files').val(JSON.stringify(response.data));
+                if($('#attach_files').val() != '') {
+                    var attach_files = JSON.parse($('#attach_files').val());
+                    $('#attach_files').val(JSON.stringify(attach_files.concat(response.data)));
+                } else {
+                    $('#attach_files').val(JSON.stringify(response.data));
+                }
 
             }
             else {
@@ -128,6 +133,7 @@
 
         });
 
+        // Save button action
         $('#submit').click(function(e) {
 
             e.preventDefault();
@@ -149,6 +155,7 @@
             });
         });
 
+        // Download button action
         $('#download').click(function(e) {
 
             e.preventDefault();
@@ -160,6 +167,7 @@
 
         });
 
+        // Reset button action
         $('#reset').click(function(e) {
             e.preventDefault();
 

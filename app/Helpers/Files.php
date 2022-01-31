@@ -52,53 +52,39 @@ class Files
         /** @var UploadedFile $uploadedFile */
         $uploadedFile->storeAs('temp', $newName);
 
-        if (!empty($crop)) {
-            // Crop image
-            if (isset($crop[0])) {
-                // To store the multiple images for the copped ones
-                foreach ($crop as $cropped) {
-                    $image = Image::make($tempPath);
-
-                    if (isset($cropped['resize']['width']) && isset($cropped['resize']['height'])) {
-
-                        $image->crop(floor($cropped['width']), floor($cropped['height']), floor($cropped['x']), floor($cropped['y']));
-
-                        $fileName = str_replace('.', '_' . $cropped['resize']['width'] . 'x' . $cropped['resize']['height'] . '.', $newName);
-                        $tempPathCropped = public_path('user-uploads/temp') . '/' . $fileName;
-                        $newPathCropped = $folder . '/' . $fileName;
-
-                        // Resize in Proper format
-                        $image->resize($cropped['resize']['width'], $cropped['resize']['height'], function ($constraint) {
-                            //$constraint->aspectRatio();
-                            // $constraint->upsize();
-                        });
-
-                        $image->save($tempPathCropped);
-
-                        \Storage::put($newPathCropped, \File::get($tempPathCropped), ['public']);
-
-                        // Deleting cropped temp file
-                        \File::delete($tempPathCropped);
-                    }
-
-                }
-            } else {
-                $image = Image::make($tempPath);
-                $image->crop(floor($crop['width']), floor($crop['height']), floor($crop['x']), floor($crop['y']));
-                $image->save();
-            }
-
-        }
-
-        if (($width || $height)) {
-            // Crop image
+        if ($crop) {
 
             $image = Image::make($tempPath);
-            $image->resize($width, $height, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            $imageWidth = $image->width();
+            $imageHeight = $image->height();
+
+            if ($imageHeight > $imageWidth) {
+                $image->resize($width, false, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+
+                $updatedImageHeight = $image->height();
+                $y = floor(($updatedImageHeight - 1000) / 2);
+
+                $image->crop($width, $height, 0, $y);
+
+
+            } else {
+                $image->resize(false, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+
+                $updatedImageWidth = $image->width();
+                $y = floor(($updatedImageWidth - 1000) / 2);
+
+                $image->crop($width, $height, $y, 0);
+
+            }
+
             $image->save();
+
         }
 
         \Storage::put($newPath, \File::get($tempPath), ['public']);
@@ -130,7 +116,7 @@ class Files
         $newName = self::generateNewFileName($uploadedFile->getClientOriginalName());
 
         if(config('filesystems.default') === 'local'){
-            return self::upload($uploadedFile,$dir,1000,1000,false);
+            return self::upload($uploadedFile,$dir,1000,1000,true);
         }
 
         Storage::disk('s3')->putFileAs($dir, $uploadedFile, $newName, 'public');

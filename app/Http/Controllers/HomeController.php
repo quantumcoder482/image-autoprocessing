@@ -19,6 +19,7 @@ class HomeController extends Controller
 
     public function __construct()
     {
+        // Initialize product types for file name indexing
         $this->typeIndexes = [
             'mug' => 0,
             'sweatshirt' => 0,
@@ -27,11 +28,22 @@ class HomeController extends Controller
         ];
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * return view
+     * langing page
+     */
     public function index()
     {
         return view('index');
     }
 
+    /**
+     * @param Request $request
+     * @return array|mixed
+     * @throws \Exception
+     * Upload multiple files
+     */
     public function uploadFiles(Request $request)
     {
         // Check Mimetype
@@ -58,6 +70,11 @@ class HomeController extends Controller
 
     }
 
+    /**
+     * @param Request $request
+     * @return array
+     * Store all uploaded files to a zip file(target file for download)
+     */
     public function store(Request $request)
     {
         $rules = array(
@@ -81,20 +98,32 @@ class HomeController extends Controller
         $zip->open($dir_path.$zip_file_name, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
         $files = json_decode($request->attach_files, true);
+        $file_count = 0;
         foreach ($files as $file) {
             // generate file name
             $new_file_name = $this->generateFileName($request, $file['name']);
 
             if(!is_null($new_file_name)) {
                 $zip->addFile(public_path('user-uploads/client-files/' . $file['hashname']), $new_file_name);
+                $file_count++;
             }
         }
         $zip->close();
+
+        if($file_count == 0){
+            return Reply::error('There are have not files to matching with product types');
+        }
 
         return Reply::successWithData('saved data successfully', ['file_name' => str_replace('.zip', '', $zip_file_name)]);
 
     }
 
+    /**
+     * @param Request $request
+     * @param $file_name
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * Download target zip file
+     */
     public function download(Request $request, $file_name)
     {
         $zip_file_name = $file_name.'.zip';
@@ -104,11 +133,19 @@ class HomeController extends Controller
             'Content-Type: application/zip',
         );
 
+        if(!\File::exists($dir_path.$zip_file_name)) {
+            return Reply::error('Target file does not exist!');
+        }
+
         //download file
         return Response::download($dir_path.$zip_file_name, $zip_file_name, $headers);
 
     }
 
+    /**
+     * @return array
+     * Clean temporary folders for upload and download
+     */
     public function reset()
     {
         // remove temp directories
@@ -123,11 +160,18 @@ class HomeController extends Controller
         return Reply::success('reset form');
     }
 
+    /**
+     * @param $request
+     * @param $file_name
+     * @return string|null
+     * Generate new file name by the matching case and indexing
+     */
     public function generateFileName($request, $file_name)
     {
         $car_type = $request->car_type;
         $product_name = $request->product_name;
 
+        // check the string matching case and return generated new file name
         foreach($this->typeIndexes as $key => $val) {
             if(str_contains($file_name, $key)) {
                 $ext = strtolower(\File::extension($file_name));
