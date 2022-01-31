@@ -60,10 +60,22 @@ class HomeController extends Controller
         $files = array();
 
         foreach($request->file as $file) {
-            $files[] = [
-                'name' => $file->getClientOriginalName(),
-                'hashname' => Files::uploadLocalOrS3($file,'client-files')
-            ];
+            if(str_contains($file->getClientOriginalName(), 'crewneck-sweatshirt-mockup-featuring-a-bearded-man-in-a-wooded-area') || str_contains($file->getClientOriginalName(), 'front-shot-of-a-hipster-middle-aged-man-wearing-a-round-neck-t-shirt-mockup') || str_contains($file->getClientOriginalName(), 'sweatshirt-mockup-of-a-middle-aged-bearded-man-posing-by-some-steps')) {
+                $files[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'hashname' => Files::uploadLocalOrS3($file,'client-files', 'top')
+                ];
+            } elseif (str_contains($file->getClientOriginalName(), 'mockup-of-an-11-oz-mug-next-to-a-coffee-maker')) {
+                $files[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'hashname' => Files::uploadLocalOrS3($file,'client-files', 'bottom')
+                ];
+            } else {
+                $files[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'hashname' => Files::uploadLocalOrS3($file,'client-files')
+                ];
+            }
         }
 
         return Reply::successWithData('file uploaded', ['data' => $files]);
@@ -174,9 +186,10 @@ class HomeController extends Controller
         // check the string matching case and return generated new file name
         foreach($this->typeIndexes as $key => $val) {
             if(str_contains($file_name, $key)) {
-                $ext = strtolower(\File::extension($file_name));
+                // Keep Origin file extention
+                // $ext = strtolower(\File::extension($file_name));
                 $this->typeIndexes[$key] ++;
-                return $car_type . '-clothing-' . $product_name . '-' . $key . 's' . '-car-clothing-company-'. $this->typeIndexes[$key] . '.' . $ext;
+                return $car_type . '-clothing-' . $product_name . '-' . $key . 's' . '-car-clothing-company-'. $this->typeIndexes[$key] . '.jpg';
             }
         }
 

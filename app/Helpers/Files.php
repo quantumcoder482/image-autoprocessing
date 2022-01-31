@@ -26,7 +26,7 @@ class Files
      * @throws \Exception
      */
 
-    public static function upload($image, $dir, $width = null, $height = 800, $crop = false)
+    public static function upload($image, $dir, $width = null, $height = 800, $crop = false, $pos = 'center')
     {
         config(['filesystems.default' => 'local']);
 
@@ -67,7 +67,18 @@ class Files
                 $updatedImageHeight = $image->height();
                 $y = floor(($updatedImageHeight - 1000) / 2);
 
-                $image->crop($width, $height, 0, $y);
+                switch ($pos) {
+                    case 'top':
+                        $image->crop($width, $height, 0, 10);
+                        break;
+                    case 'bottom':
+                        $image->crop($width, $height, 0, $y * 2 - 10);
+                        break;
+                    case 'center':
+                        $image->crop($width, $height, 0, $y);
+                        break;
+                    default:
+                }
 
 
             } else {
@@ -80,8 +91,10 @@ class Files
                 $y = floor(($updatedImageWidth - 1000) / 2);
 
                 $image->crop($width, $height, $y, 0);
-
             }
+
+            // convert file format
+            $image->encode('jpg', 75);
 
             $image->save();
 
@@ -107,7 +120,7 @@ class Files
         return $newName . '.' . $ext;
     }
 
-    public static function uploadLocalOrS3($uploadedFile, $dir)
+    public static function uploadLocalOrS3($uploadedFile, $dir, $pos = 'center')
     {
         if (!$uploadedFile->isValid()) {
             throw new \Exception('File was not uploaded correctly');
@@ -116,7 +129,7 @@ class Files
         $newName = self::generateNewFileName($uploadedFile->getClientOriginalName());
 
         if(config('filesystems.default') === 'local'){
-            return self::upload($uploadedFile,$dir,1000,1000,true);
+            return self::upload($uploadedFile, $dir,1000,1000,true, $pos);
         }
 
         Storage::disk('s3')->putFileAs($dir, $uploadedFile, $newName, 'public');

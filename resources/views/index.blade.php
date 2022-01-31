@@ -111,7 +111,7 @@
             $('#image_file_queue').html(fileNames);
         });
 
-        ib_file.on("success", function (file, response) {
+        ib_file.on("successmultiple", function (file, response) {
 
             ib_submit.prop('disabled', false);
 
@@ -147,9 +147,13 @@
                 data: $('#submitForm').serialize(),
                 success: function (response) {
                     if(response.status === 'success'){
-                        $('#zip_file_name').val(response.file_name);
-                        $('#submit').addClass('hidden');
-                        $('#download').removeClass('hidden');
+                        // $('#zip_file_name').val(response.file_name);
+                        // $('#submit').addClass('hidden');
+                        // $('#download').removeClass('hidden');
+
+                        var url = "{{ route('download', ':fileName') }}";
+                        url = url.replace(':fileName', response.file_name);
+                        location.href = url;
                     }
                 }
             });
